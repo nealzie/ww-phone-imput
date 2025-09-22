@@ -1,0 +1,21 @@
+{
+  "name": "ww-phone-input",
+  "version": "1.0.0",
+  "description": "Phone input component for WeWeb using Maz-UI",
+  "private": true,
+  "scripts": {
+    "build": "weweb build",
+    "serve": "weweb serve"
+  },
+  "dependencies": {
+    "@maz-ui/components": "^3.50.1",
+    "maz-ui": "^3.50.1",
+    "libphonenumber-js": "^1.10.0"
+  },
+  "devDependencies": {
+    "@vue/compiler-sfc": "^3.0.0",
+    "@weweb/cli": "latest",
+    "postcss": "^8.4.31",
+    "autoprefixer": "^10.4.16"
+  }
+}

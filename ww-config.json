@@ -1,0 +1,74 @@
+{
+  "name": "Phone Input",
+  "type": "element",
+  "variables": {
+    "model": {
+      "type": "Text",
+      "defaultValue": ""
+    }
+  },
+  "triggerEvents": [
+    {
+      "name": "change",
+      "label": "On change",
+      "event": {
+        "phoneNumber": "Text",
+        "countryCode": "Text",
+        "isValid": "Boolean",
+        "isPossible": "Boolean",
+        "countryCallingCode": "Text",
+        "nationalNumber": "Text",
+        "formatInternational": "Text",
+        "formatNational": "Text"
+      }
+    }
+  ],
+  "properties": {
+    "darkMode": {
+      "label": "Dark mode",
+      "type": "OnOff",
+      "defaultValue": false
+    },
+    "showCodeOnList": {
+      "label": "Show code on list",
+      "type": "OnOff",
+      "defaultValue": true
+    },
+    "preferredCountries": {
+      "label": "Preferred countries",
+      "type": "Array",
+      "defaultValue": ["US", "GB", "CA", "FR", "DE"]
+    },
+    "countryLocale": {
+      "label": "Country locale",
+      "type": "Text",
+      "defaultValue": "en-US"
+    },
+    "autoFormat": {
+      "label": "Auto format",
+      "type": "OnOff",
+      "defaultValue": true
+    },
+    "orientation": {
+      "label": "Orientation",
+      "type": "TextSelect",
+      "options": {
+        "values": [
+          {
+            "value": "responsive",
+            "label": "Responsive"
+          },
+          {
+            "value": "row",
+            "label": "Row"
+          },
+          {
+            "value": "col",
+            "label": "Column"
+          }
+        ]
+      },
+      "defaultValue": "responsive"
+    }
+  }
+}
