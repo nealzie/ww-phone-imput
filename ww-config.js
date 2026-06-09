@@ -15,8 +15,6 @@ export default {
       section: 'settings',
       bindable: true,
       defaultValue: {
-        phoneNumber: '',
-        countryCode: 'FR'
       },
       /* wwEditor:start */
       bindingValidation: {
@@ -173,6 +171,23 @@ export default {
         type: 'boolean',
         tooltip: 'Show country code in the dropdown list',
       },
+      /* wwEditor:end */
+    },
+    defaultCountry: {
+      label: { 
+        en: 'Default country',
+        fr: 'Pays par défaut'
+      },
+      type: 'Text',
+      bindable: true,
+      defaultValue: '',
+      section: 'settings',
+      /* wwEditor:start */
+      bindingValidation: {
+        type: 'string',
+        tooltip: 'ISO country code (e.g., "US", "FR", "GB"). Leave empty to auto-detect from user locale',
+      },
+      propertyHelp: 'Set the default country code for the phone input. Use ISO country codes like "US", "FR", "GB", etc. Leave empty to automatically detect from user\'s browser locale.',
       /* wwEditor:end */
     },
     preferredCountries: {

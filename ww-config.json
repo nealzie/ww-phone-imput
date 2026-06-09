@@ -35,6 +35,11 @@
       "type": "OnOff",
       "defaultValue": true
     },
+    "defaultCountry": {
+      "label": "Default country",
+      "type": "Text",
+      "defaultValue": ""
+    },
     "preferredCountries": {
       "label": "Preferred countries",
       "type": "Array",

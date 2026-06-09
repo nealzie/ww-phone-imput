@@ -82,6 +82,58 @@ const translations = {
   },
 }
 
+// Helper function to get country code from locale
+const getCountryFromLocale = () => {
+  try {
+    // Try to get locale from WeWeb if available
+    if (typeof wwLib !== 'undefined' && wwLib.wwLang) {
+      const wwLocale = wwLib.wwLang.getText()
+      if (wwLocale) {
+        const countryMatch = wwLocale.match(/[-_]([A-Z]{2})$/i)
+        if (countryMatch) {
+          return countryMatch[1].toUpperCase()
+        }
+      }
+    }
+    
+    // Fallback to browser locale
+    const browserLocale = navigator.language || navigator.userLanguage
+    if (browserLocale) {
+      // Extract country code from locale string (e.g., 'en-US' -> 'US', 'fr-FR' -> 'FR')
+      const countryMatch = browserLocale.match(/[-_]([A-Z]{2})$/i)
+      if (countryMatch) {
+        return countryMatch[1].toUpperCase()
+      }
+      
+      // Map language-only codes to common countries
+      const langToCountry = {
+        'en': 'US',
+        'fr': 'FR',
+        'de': 'DE',
+        'es': 'ES',
+        'it': 'IT',
+        'pt': 'PT',
+        'nl': 'NL',
+        'ja': 'JP',
+        'zh': 'CN',
+        'ko': 'KR',
+        'ru': 'RU',
+        'ar': 'SA',
+        'hi': 'IN',
+      }
+      
+      const langCode = browserLocale.split(/[-_]/)[0].toLowerCase()
+      if (langToCountry[langCode]) {
+        return langToCountry[langCode]
+      }
+    }
+  } catch (error) {
+    console.warn('Could not detect user locale:', error)
+  }
+  
+  return 'US' // Ultimate fallback
+}
+
 // Default phone data structure
 const defaultPhoneData = {
   phoneNumber: '',
@@ -117,10 +169,24 @@ export default {
       return false
     })
 
+    // Determine initial country code with priority:
+    // 1. initialValue.countryCode (explicit initial value)
+    // 2. defaultCountry property (user-configured default)
+    // 3. Auto-detected from browser/WeWeb locale
+    const initialCountryCode = props.content?.initialValue?.countryCode || 
+                               props.content?.defaultCountry || 
+                               getCountryFromLocale()
+    
+    console.log('Phone Input - Initial country code:', initialCountryCode, {
+      fromInitialValue: props.content?.initialValue?.countryCode,
+      fromDefaultCountry: props.content?.defaultCountry,
+      fromLocale: !props.content?.initialValue?.countryCode && !props.content?.defaultCountry
+    })
+
     const phoneDataRef = ref({
       ...defaultPhoneData,
       phoneNumber: props.content?.initialValue?.phoneNumber || '',
-      countryCode: props.content?.initialValue?.countryCode || 'US',
+      countryCode: initialCountryCode,
     })
 
     const { setValue, value } = wwLib.wwVariable.useComponentVariable({
@@ -174,7 +240,18 @@ Object containing phone input data:
       isLoading: false,
       showError: false,
       showSuccess: false,
+      isInitializing: true,
+      previousReadOnlyState: null,
     }
+  },
+
+  mounted() {
+    // Allow the component to initialize, then enable change events
+    this.$nextTick(() => {
+      setTimeout(() => {
+        this.isInitializing = false
+      }, 150)
+    })
   },
 
   computed: {
@@ -317,6 +394,42 @@ Object containing phone input data:
       },
       immediate: true,
     },
+    'content.readOnly': {
+      handler(newValue, oldValue) {
+        // Track when transitioning from readOnly to editable
+        if (this.previousReadOnlyState === true && newValue === false) {
+          this.isInitializing = true
+          // Allow the component to initialize, then enable change events
+          this.$nextTick(() => {
+            setTimeout(() => {
+              this.isInitializing = false
+            }, 100)
+          })
+        }
+        this.previousReadOnlyState = newValue
+      },
+      immediate: true,
+    },
+    'content.defaultCountry': {
+      handler(newCountry) {
+        // Only update if there's no phone number and no explicit countryCode set
+        if (!this.localPhoneData.phoneNumber && newCountry) {
+          const newData = {
+            ...this.localPhoneData,
+            countryCode: newCountry
+          }
+          this.isInitializing = true
+          this.localPhoneData = newData
+          this.setPhoneData(newData)
+          this.$nextTick(() => {
+            setTimeout(() => {
+              this.isInitializing = false
+            }, 100)
+          })
+        }
+      },
+      immediate: true
+    },
     'content.initialValue': {
       handler(newValue) {
         if (!newValue || typeof newValue !== 'object') return
@@ -325,7 +438,7 @@ Object containing phone input data:
           const newData = {
             ...this.localPhoneData,
             phoneNumber: newValue.phoneNumber || '',
-            countryCode: newValue.countryCode || 'US'
+            countryCode: newValue.countryCode || this.content?.defaultCountry || getCountryFromLocale()
           }
 
           const hasChanges = 
@@ -333,8 +446,15 @@ Object containing phone input data:
             newValue.countryCode !== this.localPhoneData.countryCode
 
           if (hasChanges) {
+            this.isInitializing = true
             this.localPhoneData = newData
             this.setPhoneData(newData)
+            // Reset initialization flag after update
+            this.$nextTick(() => {
+              setTimeout(() => {
+                this.isInitializing = false
+              }, 100)
+            })
           }
         }
       },
@@ -350,8 +470,15 @@ Object containing phone input data:
         )
         
         if (hasChanges) {
+          // Set initialization flag to prevent change events during external updates
+          this.isInitializing = true
           this.localPhoneData = { ...this.localPhoneData, ...newValue }
-          // Note: Change events are now emitted directly in handleUpdate, handleData, and handleCountryCode methods
+          // Reset initialization flag after update
+          this.$nextTick(() => {
+            setTimeout(() => {
+              this.isInitializing = false
+            }, 100)
+          })
         }
       },
       deep: true,
@@ -362,6 +489,10 @@ Object containing phone input data:
   methods: {
     // Centralized method to emit change event
     emitChangeEvent() {
+      // Don't emit change events during initialization or when transitioning from readOnly
+      if (this.isInitializing) {
+        return
+      }
       this.$emit('trigger-event', { name: 'change', event: this.localPhoneData })
     },
 
